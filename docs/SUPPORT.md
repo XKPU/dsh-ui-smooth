@@ -15,7 +15,7 @@
 
 | 项目 | 说明 |
 | --- | --- |
-| 插件版本 | `1.0.0`（见 [`package.json`](../package.json)） |
+| 插件版本 | `0.1.0`（见 [`package.json`](../package.json)） |
 | DSH | `>=0.2.0 <=0.2.3` |
 | 宿主 | Web UI profile；桌面壳由页面 UA 中的 `Electron/` 判定 |
 | 浏览器端 | 动画预算、旧轮次回收与「后台不节流」均可用 |
