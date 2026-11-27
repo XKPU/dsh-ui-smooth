@@ -1,0 +1,9 @@
+# dsh-ui-smooth bundle patch
+#
+# The `dsh.bundle.patch` layer: adding this package to `dsh.profile.bundles`
+# makes the profile boot merge this patch, which mounts the loader row for the
+# plugin (host half + `dsh.client` scan). The plugin is client-only, so the
+# row exists mainly to make the browser bundle discoverable.
+- insert:
+    - id: dsh-ui-smooth
+      name: dsh-ui-smooth
