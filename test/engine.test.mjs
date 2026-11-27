@@ -371,3 +371,21 @@ test('a window shorter than the tail is left alone', () => {
   assert.equal(sliceHistory(null, 10), null)
   assert.equal(sliceHistory(windowOf(40), 0), null)
 })
+
+test('a turn that was looked at recently holds the cut where it is', () => {
+  const entries = windowOf(40)
+  const kept = sliceHistory(entries, 10, (turn) => turn <= 25)
+  assert.notEqual(kept, null)
+  assert.equal(kept[0].event.type, 'turn/start')
+  assert.equal(kept[0].event.data.turn, 26, 'everything from the warm turn on stays')
+})
+
+test('too few quiet turns mean no cut at all', () => {
+  assert.equal(sliceHistory(windowOf(40), 10, (turn) => turn <= 3), null, 'three quiet turns are below the floor')
+  assert.notEqual(sliceHistory(windowOf(40), 10, (turn) => turn <= 4), null, 'four are worth a page')
+})
+
+test('without a clock every turn past the tail is droppable', () => {
+  assert.equal(sliceHistory(windowOf(40), 10, undefined).length, 20)
+  assert.equal(sliceHistory(windowOf(40), 10, () => true).length, 20)
+})

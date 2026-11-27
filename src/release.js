@@ -20,21 +20,37 @@ const MIN_RELEASED_TURNS = 4
 /**
  * Cut a loaded history window down to its newest `keepTurns` turns.
  *
+ * Only a prefix goes: a turn is dropped when it sits before the kept tail *and*
+ * nothing has looked at it for a while — a turn that was just paged back in
+ * stays put until its own quiet period runs out. One warm turn stops the cut
+ * there, because everything older goes with it.
+ *
  * @param entries - the session's loaded window, oldest first.
  * @param keepTurns - turns to keep at the tail.
+ * @param isCold - whether a turn has been out of sight long enough to drop.
  * @returns the slice to keep, or `null` when there is nothing worth dropping.
  */
-function sliceHistory(entries, keepTurns) {
+function sliceHistory(entries, keepTurns, isCold) {
 	if (!Array.isArray(entries) || entries.length === 0) return null
 	if (!Number.isSafeInteger(keepTurns) || keepTurns < 1) return null
 	const starts = []
+	const turns = []
 	for (let index = 0; index < entries.length; index += 1) {
-		if (entries[index]?.event?.type === 'turn/start') starts.push(index)
+		const event = entries[index]?.event
+		if (event?.type !== 'turn/start') continue
+		const turn = Number(event.data?.turn)
+		starts.push(index)
+		turns.push(Number.isSafeInteger(turn) ? turn : starts.length)
 	}
-	if (starts.length - keepTurns < MIN_RELEASED_TURNS) return null
-	const cut = starts[starts.length - keepTurns]
-	if (cut <= 0) return null
-	return entries.slice(cut)
+	const droppable = starts.length - keepTurns
+	if (droppable < MIN_RELEASED_TURNS) return null
+	let cut = -1
+	for (let group = 0; group < droppable; group += 1) {
+		if (typeof isCold === 'function' && !isCold(turns[group])) break
+		cut = group
+	}
+	if (cut < MIN_RELEASED_TURNS - 1) return null
+	return entries.slice(starts[cut + 1])
 }
 
 /** The sessions the main view is showing (a retained session may also be a background one). */
@@ -75,7 +91,8 @@ function mainSessions(service) {
  *
  * @returns how many sessions were trimmed.
  */
-function releaseHistory(service, keepTurns) {
+function releaseHistory(service, release, isCold) {
+	const keepTurns = release.turns
 	let released = 0
 	for (const session of mainSessions(service)) {
 		if (session.openState !== 'open') continue
@@ -87,7 +104,7 @@ function releaseHistory(service, keepTurns) {
 		} catch (reason) {
 			continue
 		}
-		const kept = sliceHistory(entries, keepTurns)
+		const kept = sliceHistory(entries, keepTurns, isCold)
 		if (kept === null) continue
 		try {
 			session.installWindow(kept, true)

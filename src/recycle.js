@@ -49,6 +49,8 @@ const CONTAINMENT_CSS = `
  */
 function createRecycler(ctx) {
 	const seenAt = new WeakMap()
+	/** When each turn was last mounted or looked at; outlives the row itself. */
+	const warmth = new Map()
 	const parked = new WeakMap()
 	let root = null
 	let nearObserver = null
@@ -78,7 +80,10 @@ function createRecycler(ctx) {
 			nearObserver = new IntersectionObserver((records) => {
 				for (const record of records) {
 					if (!record.isIntersecting) continue
-					seenAt.set(record.target, Date.now())
+					const seen = Date.now()
+					seenAt.set(record.target, seen)
+					const turn = Number(record.target.getAttribute('data-chat-turn'))
+					if (Number.isSafeInteger(turn)) warmth.set(turn, seen)
 					unpark(record.target)
 					record.target.removeAttribute(ROW_ATTRIBUTE)
 				}
@@ -149,7 +154,12 @@ function createRecycler(ctx) {
 		let skipped = 0
 		let unmounted = 0
 
+		if (warmth.size > 5000) warmth.clear()
 		for (const entry of found.rows) {
+			if (!seenAt.has(entry.row)) {
+				seenAt.set(entry.row, now)
+				warmth.set(entry.turn, now)
+			}
 			const age = newest - entry.turn
 			const cold = now - (seenAt.get(entry.row) ?? 0)
 			const unmount = config.unmount.enabled
@@ -183,7 +193,8 @@ function createRecycler(ctx) {
 		}
 
 		if (config.release.enabled) {
-			releases += releaseHistory(ctx?.sessions, config.release.turns)
+			const quietMs = config.release.minutes * 60000
+			releases += releaseHistory(ctx?.sessions, config.release, (turn) => now - (warmth.get(turn) ?? 0) > quietMs)
 		}
 
 		if (debugEnabled()) {

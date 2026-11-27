@@ -19,8 +19,8 @@ const DEFAULTS = {
 	backgroundThrottle: true,
 	duringStream: true,
 	skip: { enabled: true, turns: 3, minutes: 5 },
-	unmount: { enabled: true, turns: 5, minutes: 23 },
-	release: { enabled: false, turns: 8 }
+	unmount: { enabled: true, turns: 5, minutes: 16 },
+	release: { enabled: false, turns: 8, minutes: 20 }
 }
 
 let config = cloneConfig(DEFAULTS)
@@ -37,12 +37,13 @@ function readTier(source, key) {
 	}
 }
 
-/** The aggressive tier has no age threshold: it keeps a tail and drops the rest. */
+/** The aggressive tier keeps a tail and drops what has been quiet long enough. */
 function readRelease(source) {
 	const tier = source?.release ?? {}
 	return {
 		enabled: tier.enabled === true,
-		turns: Math.max(2, numberOr(tier.turns, DEFAULTS.release.turns))
+		turns: Math.max(2, numberOr(tier.turns, DEFAULTS.release.turns)),
+		minutes: numberOr(tier.minutes, DEFAULTS.release.minutes)
 	}
 }
 

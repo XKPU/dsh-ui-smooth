@@ -147,6 +147,11 @@ function SettingsSection() {
 				h(NumberField, {
 					value: state.release.turns, min: 2, max: 500, suffix: '轮以前',
 					onChange: (turns) => patch({ release: { ...state.release, turns } })
+				}),
+				h('span', { className: 'uis-label' }, '且重新加载后'),
+				h(NumberField, {
+					value: state.release.minutes, min: 1, max: 4320, suffix: '分钟未查看',
+					onChange: (minutes) => patch({ release: { ...state.release, minutes } })
 				})
 			]
 		})
