@@ -1,0 +1,66 @@
+{
+  "name": "dsh-ui-smooth",
+  "version": "1.0.0",
+  "description": "Web UI smoothness budget for DeepSeek Harness: keeps idle animations off the main thread, recycles old transcript turns, unloads old history from memory, and stops the desktop shell from freezing the page in the background.",
+  "type": "module",
+  "main": "lib/index.js",
+  "license": "GPL-3.0-or-later",
+  "author": "knight <knight-z@foxmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/XKPU/dsh-ui-smooth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/XKPU/dsh-ui-smooth/issues"
+  },
+  "homepage": "https://github.com/XKPU/dsh-ui-smooth#readme",
+  "icon": "./icon.svg",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "performance",
+    "animation",
+    "layout",
+    "memory",
+    "cpu",
+    "web-ui"
+  ],
+  "engines": {
+    "dsh": ">=0.2.0 <=0.2.3"
+  },
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "scripts",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "pretest": "node scripts/build.mjs",
+    "test": "node test/engine.test.mjs"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": []
+    }
+  }
+}
