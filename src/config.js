@@ -19,8 +19,8 @@ const DEFAULTS = {
 	backgroundThrottle: true,
 	duringStream: true,
 	skip: { enabled: true, turns: 3, minutes: 5 },
-	unmount: { enabled: true, turns: 8, minutes: 23 },
-	release: { enabled: false, turns: 18 }
+	unmount: { enabled: true, turns: 5, minutes: 23 },
+	release: { enabled: false, turns: 8 }
 }
 
 let config = cloneConfig(DEFAULTS)
@@ -109,6 +109,15 @@ function debugEnabled() {
 	}
 }
 
+/** Whether this page runs inside the Electron shell rather than a browser. */
+function desktop() {
+	try {
+		return typeof navigator !== 'undefined' && navigator.userAgent.indexOf('Electron/') >= 0
+	} catch (reason) {
+		return false
+	}
+}
+
 /** Subscribe to config changes; returns the unsubscribe. */
 function onConfig(listener) {
 	configListeners.add(listener)
@@ -120,6 +129,7 @@ module.exports = {
 	VERSION,
 	cloneConfig,
 	debugEnabled,
+	desktop,
 	getConfig: () => config,
 	hostElectron: () => hostElectron,
 	loadConfig,

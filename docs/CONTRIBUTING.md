@@ -40,14 +40,15 @@
 
 | 路径 | 作用 |
 | --- | --- |
-| `lib/index.js` | 宿主半：注入 `webServer`，提供 `/dsh-ui-smooth/config`，读写 `$DSH_HOME/dsh-ui-smooth.json`，控制 Electron 后台节流 |
-| `src/` | 页面半的源码，七个模块，每个不超过 500 行 |
+| `lib/index.js` | 宿主半：注入 `webServer`，提供 `/dsh-ui-smooth/config`，读写 `$DSH_HOME/dsh-ui-smooth.json`；宿主确实运行在 Electron 中时尽力调用 `setBackgroundThrottling(false)` |
+| `src/` | 页面半的源码，八个模块，每个不超过 500 行 |
 | `src/animations.js` | 动画计划器：属性分类、`steps()` 降采样、扫光改写 |
 | `src/animate.js` | 把计划写进页面的那一个 `<style>`，样式表变化后重算 |
-| `src/config.js` | 两侧共用的配置：默认值、归一化、读写 `/dsh-ui-smooth/config` |
+| `src/config.js` | 两侧共用的配置：默认值、归一化、读写 `/dsh-ui-smooth/config`，以及 UA 判定是否桌面壳 |
 | `src/recycle.js` | 旧轮次回收：`skip` 与 `parked` 两档，观察器与调度 |
 | `src/release.js` | 激进档：截断已加载窗口并把分页流的头一起挪动 |
 | `src/settings.js` | 设置页「流畅性」面板 |
+| `src/keepawake.js` | 后台保活：关闭节流时用 40 Hz、增益 0.0001 的 AudioContext 顶住渲染进程 |
 | `src/main.js` | 模块面：`apply`、调试句柄 `window.__dshUiSmooth`、插槽注册与卸载 |
 | `lib/client.js` | **构建产物**，不要手改：`npm run build` 由 `scripts/build.mjs` 从 `src/` 生成 |
 | `scripts/build.mjs` | 无依赖打包器，把 `src/` 拼成 DSH 只认的那一个 `client.js` |

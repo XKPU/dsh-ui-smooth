@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "UI Smoothness",
+    "description": "Keeps the Web UI smooth: an animation budget for other plugins' idle animations, recycling of old transcript turns, a windowed history that gives memory back, and a desktop switch that stops the shell from freezing the page in the background."
+  }
+}

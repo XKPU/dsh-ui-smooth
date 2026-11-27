@@ -9,7 +9,7 @@
 const react = require('react')
 const h = react.createElement
 
-const { VERSION, cloneConfig, getConfig, hostElectron, onConfig, saveConfig } = require('./config.js')
+const { VERSION, cloneConfig, desktop, getConfig, hostElectron, onConfig, saveConfig } = require('./config.js')
 
 function Switch({ checked, disabled, onChange }) {
 	return h('button', {
@@ -54,7 +54,7 @@ function Card({ title, hint, control, children }) {
 
 function SettingsSection() {
 	const [state, setState] = react.useState(getConfig)
-	const electron = hostElectron()
+	const electron = hostElectron() || desktop()
 	react.useEffect(() => onConfig((next) => setState(cloneConfig(next))), [])
 
 	const patch = (next) => {

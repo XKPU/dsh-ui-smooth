@@ -36,7 +36,8 @@
     "./client": {
       "default": "./lib/client.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib",
@@ -46,7 +47,8 @@
     "icon.svg",
     "README.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "locale"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",

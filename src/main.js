@@ -8,7 +8,8 @@
 
 const { installAnimations } = require('./animate.js')
 const { LAYOUT_PROPERTIES, PAINT_PROPERTIES, classify, coarsen, planSheets, planSweep, readAnimations, readKeyframes } = require('./animations.js')
-const { VERSION, cloneConfig, getConfig, hostElectron, loadConfig, onConfig } = require('./config.js')
+const { VERSION, cloneConfig, desktop, getConfig, hostElectron, loadConfig, onConfig } = require('./config.js')
+const { createKeepAwake } = require('./keepawake.js')
 const { CONTAINMENT_CSS, createRecycler } = require('./recycle.js')
 const { mainSessions, sliceHistory } = require('./release.js')
 const { SETTINGS_CSS, SettingsSection } = require('./settings.js')
@@ -27,6 +28,7 @@ function apply(ctx) {
 	installStyleSheet()
 	const animations = installAnimations()
 	const recycler = createRecycler(ctx)
+	const keepAwake = createKeepAwake()
 	const slotIds = () => {
 		try {
 			return ctx?.slots?.entries?.('settings.section')?.map?.((entry) => entry.id) ?? []
@@ -52,6 +54,7 @@ function apply(ctx) {
 		}),
 		restore: () => animations.restore(),
 		config: () => cloneConfig(getConfig()),
+		throttle: () => ({ host: hostElectron(), desktop: desktop(), ...keepAwake.status() }),
 		/** What the aggressive tier sees: the loaded window it would trim. */
 		history: () => {
 			const session = mainSessions(ctx?.sessions)[0]
@@ -73,10 +76,25 @@ function apply(ctx) {
 	}
 	window.__dshUiSmooth = handle
 
-	onConfig(() => recycler.restoreAll())
+	/**
+	 * The switch reads "throttle me in the background". Off means the page keeps
+	 * running there: the host half asks the shell when it is inside one, and the
+	 * page holds an inaudible audio stream open for the case where it is not.
+	 */
+	const syncThrottle = () => {
+		const off = getConfig().backgroundThrottle === false
+		if (off && (hostElectron() || desktop())) keepAwake.start()
+		else keepAwake.stop()
+	}
+
+	onConfig(() => {
+		recycler.restoreAll()
+		syncThrottle()
+	})
 
 	loadConfig().then(() => {
 		recycler.pass()
+		syncThrottle()
 	})
 
 	if (ctx !== undefined && ctx !== null && typeof ctx.slots?.inject === 'function') {
@@ -94,6 +112,7 @@ function apply(ctx) {
 	if (ctx !== undefined && ctx !== null && typeof ctx.effect === 'function') {
 		ctx.effect(() => () => {
 			animations.dispose()
+			keepAwake.stop()
 			recycler.dispose()
 			const css = document.getElementById(CSS_ID)
 			if (css !== null) css.remove()

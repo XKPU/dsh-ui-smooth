@@ -17,8 +17,8 @@
 | --- | --- |
 | 插件版本 | `1.0.0`（见 [`package.json`](../package.json)） |
 | DSH | `>=0.2.0 <=0.2.3` |
-| 宿主 | Web UI profile；桌面端额外支持关闭 Electron 后台节流 |
-| 浏览器端 | 动画预算与旧轮次回收可用；「后台不节流」不可用 |
+| 宿主 | Web UI profile；桌面壳由页面 UA 中的 `Electron/` 判定 |
+| 浏览器端 | 动画预算、旧轮次回收与「后台不节流」均可用 |
 
 插件是 DSH 插件，不是独立应用，也不会修改 DSH 前端源码。它用注入样式和页面侧脚本工作，依赖 DSH 暴露的 `settings.section` 插槽与 `webServer` 能力。
 
@@ -31,9 +31,9 @@
 - 「值相同就不写」的去重，3 组对照下来样式重算中位数 428ms（关）vs 434ms（开），没有任何收益。
 - 真正能改的是把 `--dsh-conversation-column-width` 这类变量挂到更窄的容器、或换成 container query，但那应该是宿主侧的改动，插件无法对其产生精确、不破坏页面的改动。
 
-### 「后台不节流」为什么是灰的
+### 「后台不节流」怎么生效
 
-该功能仅在桌面端 Electron 壳中有效
+关掉开关后，页面开一段 40 Hz、增益 0.0001 的静音音频流，让 Chromium 不把渲染进程放进后台节流集合；开关打开即关闭音频流。桌面端若宿主确实运行在 Electron 主进程里，会优先使用 `setBackgroundThrottling(false)`，但壳并没有给宿主窗口控制通道，所以页面这一层是实际兜底。是否在壳中由 `navigator.userAgent` 的 `Electron/` 判定，设置项不会置灰。
 
 ### 长会话滚回旧轮次会看到空白吗
 
@@ -83,7 +83,8 @@ window.__dshUiSmooth.status()
 - `animations`：样式表扫描次数与命中的动画列表；
 - `recycling`：当前 `skip` / `parked` 的轮次数；
 - `config`：当前配置；
-- `electron`：宿主是否为 Electron；
+- `electron`：宿主回报是否为 Electron；
+- `throttle()`：`host`（宿主回报）、`desktop`（页面 UA 判定）与静音音频流的 `active` / `state`；
 - `settingsSection`：已注册的设置插槽 ID。
 
 历史变更见 [CHANGELOG.md](CHANGELOG.md)。
