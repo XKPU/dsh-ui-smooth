@@ -1,29 +1,29 @@
 /**
- * Keep the desktop page running while it is not in front.
+ * Keep the page running while it is not in front.
  *
- * Chromium throttles a hidden renderer, and Electron's own escape hatch —
- * `webContents.setBackgroundThrottling(false)` — lives in the shell's main
- * process. The DSH host is a Node-mode child of that shell with no channel to
- * it, so the host half can configure the switch but cannot reach the window.
- *
- * What a page can do for itself is hold an audio stream open: Chromium keeps a
- * renderer that is playing audio out of the throttled set. The stream here is a
- * 40 Hz oscillator at a gain far below audibility, so it adds no sound.
+ * Every Chromium browser, and the Electron shell around DSH, throttles a
+ * renderer whose window is hidden or covered: timers slow to a crawl and frames
+ * stop, so a streamed answer piles up and lands in one burst when the reader
+ * comes back. A page that is playing audio is exempt from that throttling,
+ * wherever it runs, so the switch holds an audio stream open — a 40 Hz
+ * oscillator at a gain far below audibility, which adds no sound.
  */
 
 const INAUDIBLE_GAIN = 0.0001
 const INAUDIBLE_HZ = 40
 
+const GESTURES = ['pointerdown', 'keydown', 'wheel', 'touchstart']
+
 function createKeepAwake() {
 	let context = null
 	let source = null
+	let waiting = false
 
 	const start = () => {
 		if (context !== null) return false
-		const AudioContext = window.AudioContext ?? window.webkitAudioContext
-		if (typeof AudioContext !== 'function') return false
+		if (typeof window.AudioContext !== 'function') return false
 		try {
-			const next = new AudioContext()
+			const next = new window.AudioContext()
 			const gain = next.createGain()
 			gain.gain.value = INAUDIBLE_GAIN
 			const oscillator = next.createOscillator()
@@ -33,14 +33,39 @@ function createKeepAwake() {
 			oscillator.start()
 			context = next
 			source = oscillator
-			// A shell that has not seen a gesture yet starts the context suspended.
-			if (next.state === 'suspended') next.resume().catch(() => {})
+			wake()
 			return true
 		} catch (reason) {
 			context = null
 			source = null
 			return false
 		}
+	}
+
+	/**
+	 * A context built before the page saw a gesture starts suspended, and a
+	 * suspended context buys nothing: Chromium only exempts a renderer that is
+	 * actually playing. Hold the first gesture and the return to the front as
+	 * the moments to ask again.
+	 */
+	function wake() {
+		if (context === null || context.state !== 'suspended') {
+			waiting = false
+			return
+		}
+		context.resume().then(() => {
+			if (context !== null && context.state === 'running') waiting = false
+		}).catch(() => {})
+		if (waiting) return
+		waiting = true
+		for (const name of GESTURES) window.addEventListener(name, wake, { capture: true, once: true, passive: true })
+		document.addEventListener('visibilitychange', wake)
+	}
+
+	function unwind() {
+		for (const name of GESTURES) window.removeEventListener(name, wake, { capture: true })
+		document.removeEventListener('visibilitychange', wake)
+		waiting = false
 	}
 
 	const stop = () => {
@@ -54,6 +79,7 @@ function createKeepAwake() {
 		}
 		context = null
 		source = null
+		unwind()
 		return true
 	}
 
