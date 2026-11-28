@@ -8,7 +8,7 @@ const CONFIG_URL = '/dsh-ui-smooth/config'
 const DEBUG_KEY = 'dsh-ui-smooth:debug'
 
 /** Shown in the settings header and reported by the debug handle. */
-const VERSION = '0.1.1'
+const VERSION = '0.1.2'
 
 /* ------------------------------------------------------------------ *
  * Config
