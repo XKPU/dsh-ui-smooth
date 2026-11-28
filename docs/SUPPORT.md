@@ -67,7 +67,7 @@ window.__dshUiSmooth.status()
 - `animations`：样式表扫描次数与命中的动画列表；
 - `recycling`：当前 `skip` / `parked` 的轮次数；
 - `config`：当前配置；
-- `throttle()`：静音音频流的 `active` / `state`；
+- `throttle()`：静音音频流的 `active` / `state`，以及 500 ms 探针实测的最长间隔 `gap`（约 500 表示未被节流）；
 - `settingsSection`：已注册的设置插槽 ID。
 
 历史变更见 [CHANGELOG.md](CHANGELOG.md)。

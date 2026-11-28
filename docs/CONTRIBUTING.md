@@ -45,7 +45,7 @@
 | `src/recycle.js` | 旧轮次回收：`skip` 与 `parked` 两档，观察器与调度 |
 | `src/release.js` | 激进档：截断已加载窗口并把分页流的头一起挪动 |
 | `src/settings.js` | 设置页「流畅性」面板 |
-| `src/keepawake.js` | 后台保活：关闭节流时用 40 Hz、增益 0.0001 的 AudioContext 顶住渲染进程，suspended 时等首次手势或切回前台重试播放 |
+| `src/keepawake.js` | 后台保活：关闭节流时用 40 Hz、增益 0.002 的 AudioContext 顶住渲染进程；suspended 时每 15 秒并检查首次手势或切回前台重试播放，探针记录定时器最长间隔供诊断 |
 | `src/follow.js` | 切回前台：若隐藏前停在会话底部则滚回最新消息，否则保持原位置 |
 | `src/main.js` | 模块面：`apply`、调试句柄 `window.__dshUiSmooth`、插槽注册与卸载 |
 | `lib/client.js` | **构建产物**，不要手改：`npm run build` 由 `scripts/build.mjs` 从 `src/` 生成 |
